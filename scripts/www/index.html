@@ -1,213 +1,306 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>刘幼娜 · 个人介绍</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Noto Sans SC', sans-serif;
-      background: radial-gradient(circle at top, #0f2027, #203a43, #000000);
-      color: #eee;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-
-    .card {
-      position: relative;
-      z-index: 1;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(12px);
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.5);
-      width: 360px;
-      text-align: center;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .card:hover {
-      transform: translateY(-12px) scale(1.02);
-    }
-
-    .avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #f7971e, #ffd200);
-      margin: 0 auto 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-size: 36px;
-      font-weight: 600;
-      box-shadow: 0 0 20px rgba(255,215,0,0.6);
-    }
-
-    h1 { font-size: 24px; margin-bottom: 10px; }
-
-    .tag {
-      display: inline-block;
-      padding: 5px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.1);
-      color: #ffd700;
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    .info { text-align: left; margin-top: 20px; }
-    .info p { margin: 10px 0; line-height: 1.6; }
-    .label { font-weight: 600; color: #bbb; }
-
-    .footer { margin-top: 30px; font-size: 12px; color: #777; }
-
-    .mood {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 10px;
-      background: rgba(255, 0, 0, 0.1);
-      color: #ff6b6b;
-      font-size: 13px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>飞行射击小游戏</title>
+<style>
+body { margin:0; overflow:hidden; background:#000; }
+canvas { display:block; }
+#startBtn, #restartBtn{
+  position:absolute;left:50%;transform:translateX(-50%);
+  padding:12px 24px;font-size:18px;border:none;border-radius:10px;
+}
+#startBtn{ top:50%; }
+#restartBtn{ top:60%; display:none; }
+#rankBox{
+  position:absolute; right:10px; top:10px;
+  background:rgba(0,0,0,0.5); color:#fff; padding:10px;
+  font-size:12px; border-radius:8px;
+}
+</style>
 </head>
 <body>
+<button id="startBtn">开始游戏</button>
+<button id="restartBtn">重新开始</button>
+<div id="rankBox"></div>
+<canvas id="game"></canvas>
 
-<canvas id="starCanvas"></canvas>
-
-<div class="card">
-  <div class="avatar">刘</div>
-  <h1>刘幼娜</h1>
-  <div class="tag">IT 行业从业者</div>
-
-  <div class="info">
-    <p><span class="label">职业：</span>IT行业</p>
-    <p><span class="label">爱好：</span>旅游 ✈️</p>
-    <p><span class="label">性格：</span>有点小脾气，但很真实</p>
-  </div>
-
-  <div class="mood">⚡ 偶尔会发脾气，但来得快去得也快</div>
-  <div class="footer">© 2026 Personal Page</div>
-</div>
+<!-- 音频 -->
+<audio id="bgMusic" src="video_20260415_175628.mp3" loop>
+<audio id="dieSound" src="20260415_174931.m4a">
+<audio id="bossDieSound" src="video_20260415_191417.mp3">
 
 <script>
-const canvas = document.getElementById('starCanvas');
+const canvas = document.getElementById('game');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
 const ctx = canvas.getContext('2d');
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let stars = [];
-let meteors = [];
+const bgMusic = document.getElementById('bgMusic');
+const dieSound = document.getElementById('dieSound');
+const bossDieSound = document.getElementById('bossDieSound');
 
-function createStar() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    size: Math.random() * 2,
-    alpha: Math.random(),
-    speed: Math.random() * 0.02
-  };
+// 图片
+const enemyImg = new Image();
+enemyImg.src = "234.jpg";
+
+const bossImg = new Image();
+bossImg.src = "123.jpg";
+
+let gameStarted = false;
+let gameOver = false;
+
+let player = { x:200, y:500, hp:100, maxHp:100 };
+function initPlayer(){
+  player = { x:200, y:500, hp:100, maxHp:100 };
 }
 
-for (let i = 0; i < 150; i++) stars.push(createStar());
+let score = 0;
+let highScore = Number(localStorage.getItem('highScore')||0);
+let rankings = JSON.parse(localStorage.getItem('rankings')||'[]');
 
-function drawStars() {
-  stars.forEach(star => {
-    star.alpha += star.speed;
-    if (star.alpha <= 0 || star.alpha >= 1) star.speed *= -1;
+let bullets = [];
+let enemyBullets = [];
+let level = 1;
 
-    ctx.beginPath();
-    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,215,0,${star.alpha})`;
-    ctx.fill();
-  });
+let enemies = [];
+let boss = null;
+let bossBullets = [];
+let explosions = [];
+
+function spawnEnemy(){
+  if(!boss){
+    enemies.push({x:Math.random()*canvas.width,y:-20,size:30,speed:2});
+  }
 }
 
-function createMeteor() {
-  return {
-    x: Math.random() * canvas.width,
-    y: 0,
-    len: Math.random() * 80 + 50,
-    speed: Math.random() * 6 + 4,
-    angle: Math.PI / 4
-  };
+function spawnBoss(){
+  boss = {x:100,y:50,w:120,h:120,hp:200,maxHp:200,dir:1};
 }
 
-function drawMeteors() {
-  if (Math.random() < 0.02) meteors.push(createMeteor());
-
-  meteors.forEach((m, i) => {
-    const x = m.x;
-    const y = m.y;
-
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - m.len * Math.cos(m.angle), y - m.len * Math.sin(m.angle));
-    ctx.strokeStyle = 'rgba(255,215,0,0.8)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    m.x += m.speed;
-    m.y += m.speed;
-
-    if (m.y > canvas.height) meteors.splice(i, 1);
-  });
+function shoot(){
+  if(level===1){ bullets.push({x:player.x,y:player.y,speed:8}); }
+  else if(level===2){
+    bullets.push({x:player.x-10,y:player.y,speed:8});
+    bullets.push({x:player.x+10,y:player.y,speed:8});
+  }else{
+    bullets.push({x:player.x,y:player.y,speed:10});
+    bullets.push({x:player.x-15,y:player.y,speed:8});
+    bullets.push({x:player.x+15,y:player.y,speed:8});
+  }
 }
 
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawStars();
-  drawMeteors();
-  requestAnimationFrame(animate);
+function boom(x,y){
+  for(let i=0;i<10;i++){
+    explosions.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20});
+  }
 }
 
-animate();
-
-window.addEventListener('mousemove', (e) => {
-  stars.push({
-    x: e.clientX,
-    y: e.clientY,
-    size: 2,
-    alpha: 1,
-    speed: -0.02
-  });
+canvas.addEventListener('touchmove',e=>{
+  let t=e.touches[0];player.x=t.clientX;player.y=t.clientY;
+});
+canvas.addEventListener('mousemove',e=>{
+  player.x=e.clientX;player.y=e.clientY;
 });
 
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
+function update(){
+  if(gameOver) return;
+
+  for(let i=bullets.length-1;i>=0;i--){
+    let b=bullets[i];b.y-=b.speed;
+    if(b.y<0) bullets.splice(i,1);
+  }
+
+  for(let i=enemies.length-1;i>=0;i--){
+    let e=enemies[i];e.y+=e.speed;
+
+    if(Math.random()<0.004){
+      enemyBullets.push({x:e.x,y:e.y,speed:2.5});
+    }
+
+    if(e.y>canvas.height){
+      player.hp-=5;
+      enemies.splice(i,1);
+      continue;
+    }
+
+    if(Math.abs(e.x-player.x)<20 && Math.abs(e.y-player.y)<20){
+      player.hp-=10;
+      enemies.splice(i,1);
+      boom(player.x,player.y);
+    }
+  }
+
+  for(let i=enemyBullets.length-1;i>=0;i--){
+    let b=enemyBullets[i];b.y+=b.speed;
+    if(Math.abs(b.x-player.x)<15 && Math.abs(b.y-player.y)<15){
+      player.hp-=5;
+      enemyBullets.splice(i,1);
+    }
+    if(b.y>canvas.height) enemyBullets.splice(i,1);
+  }
+
+  for(let i=bullets.length-1;i>=0;i--){
+    let b=bullets[i];
+    for(let j=enemies.length-1;j>=0;j--){
+      let e=enemies[j];
+      if(Math.abs(b.x-e.x)<20 && Math.abs(b.y-e.y)<20){
+        boom(e.x,e.y);
+        bullets.splice(i,1);
+        enemies.splice(j,1);
+        score++;
+        if(score%10===0) level++;
+        if(score%20===0 && !boss) spawnBoss();
+        break;
+      }
+    }
+  }
+
+  if(boss){
+    boss.x+=boss.dir*5;
+    if(boss.x<0||boss.x+boss.w>canvas.width) boss.dir*=-1;
+
+    if(Math.random()<0.03){
+      bossBullets.push({x:boss.x+boss.w/2,y:boss.y+boss.h,speed:5});
+    }
+
+    for(let i=bossBullets.length-1;i>=0;i--){
+      let b=bossBullets[i];b.y+=b.speed;
+      if(Math.abs(b.x-player.x)<15 && Math.abs(b.y-player.y)<15){
+        player.hp-=5;
+        bossBullets.splice(i,1);
+      }
+      if(b.y>canvas.height) bossBullets.splice(i,1);
+    }
+
+    for(let i=bullets.length-1;i>=0;i--){
+      let b=bullets[i];
+      if(b.x>boss.x && b.x<boss.x+boss.w && b.y>boss.y && b.y<boss.y+boss.h){
+        boss.hp--;
+        bullets.splice(i,1);
+        if(boss.hp<=0){
+          boom(boss.x,boss.y);
+          // BOSS死亡音效
+          bossDieSound.currentTime = 0;
+          bossDieSound.play().catch(err=>{});
+          boss=null;
+          score+=20;
+        }
+      }
+    }
+  }
+
+  explosions.forEach((ex,i)=>{
+    ex.x+=ex.vx;ex.y+=ex.vy;ex.life--;
+    if(ex.life<=0) explosions.splice(i,1);
+  });
+
+  if(player.hp<=0) endGame();
+}
+
+function draw(){
+  ctx.fillStyle='black';ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // 玩家
+  ctx.fillStyle='cyan';
+  ctx.beginPath();
+  ctx.moveTo(player.x,player.y-20);
+  ctx.lineTo(player.x-15,player.y+20);
+  ctx.lineTo(player.x+15,player.y+20);
+  ctx.fill();
+
+  ctx.fillStyle='yellow';
+  bullets.forEach(b=>ctx.fillRect(b.x-2,b.y,4,10));
+
+  // 小怪图片
+  enemies.forEach(e=>{
+    ctx.drawImage(enemyImg, e.x, e.y, e.size, e.size);
+  });
+
+  ctx.fillStyle='orange';
+  enemyBullets.forEach(b=>ctx.fillRect(b.x,b.y,4,8));
+
+  // BOSS图片
+  if(boss){
+    ctx.drawImage(bossImg, boss.x, boss.y, boss.w, boss.h);
+
+    ctx.fillStyle='red';ctx.fillRect(20,20,200,10);
+    ctx.fillStyle='lime';ctx.fillRect(20,20,200*(boss.hp/boss.maxHp),10);
+  }
+
+  ctx.fillStyle='orange';
+  bossBullets.forEach(b=>ctx.fillRect(b.x,b.y,5,10));
+
+  ctx.fillStyle='orange';
+  explosions.forEach(ex=>{
+    ctx.beginPath();ctx.arc(ex.x,ex.y,3,0,Math.PI*2);ctx.fill();
+  });
+
+  ctx.fillStyle='white';
+  ctx.fillText('分数:'+score,20,60);
+
+  ctx.fillStyle='red';ctx.fillRect(20,80,200,10);
+  ctx.fillStyle='lime';ctx.fillRect(20,80,200*(player.hp/player.maxHp),10);
+
+  if(gameOver){
+    ctx.font='30px Arial';
+    ctx.fillText('游戏结束',canvas.width/2-60,canvas.height/2);
+  }
+}
+
+function updateRank(){
+  let box = document.getElementById('rankBox');
+  let html = '🏆 最高分: '+highScore+'<br>排行榜:<br>';
+  rankings.forEach((s,i)=>{
+    html += (i+1)+'. '+s+'<br>';
+  });
+  box.innerHTML = html;
+}
+
+function endGame(){
+  gameOver = true;
+  restartBtn.style.display='block';
+  
+  bgMusic.pause();
+  dieSound.currentTime = 0;
+  dieSound.play().catch(err=>{});
+
+  if(score > highScore){
+    highScore = score;
+    localStorage.setItem('highScore', highScore);
+  }
+
+  rankings.push(score);
+  rankings.sort((a,b)=>b-a);
+  rankings = rankings.slice(0,5);
+  localStorage.setItem('rankings', JSON.stringify(rankings));
+  updateRank();
+}
+
+function loop(){
+  if(gameStarted){ update(); draw(); }
+  requestAnimationFrame(loop);
+}
+loop();
+
+startBtn.onclick=()=>{
+  gameStarted=true;
+  startBtn.style.display='none';
+  initPlayer();
+  setInterval(spawnEnemy,800);
+  setInterval(shoot,300);
+  updateRank();
+
+  bgMusic.volume = 0.6;
+  bgMusic.play().catch(err=>{});
+};
+
+restartBtn.onclick=()=>{
+  location.reload();
+};
 </script>
-
-  <audio id="bgMusic" src="video_20260415_170321.mp3" loop autoplay muted></audio>
-
-  <script>
-    // 点击页面后开启声音（浏览器限制自动播放声音）
-    const music = document.getElementById('bgMusic');
-    document.addEventListener('click', () => {
-      music.muted = false;
-      music.play().catch(err => {
-        console.log('音频播放失败:', err);
-      });
-    });
-  </script>
-
 </body>
 </html>
