@@ -1,11 +1,793 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111225;color:#fff;font-family:system-ui,sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px}
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+.glass{background:rgba(30,30,49,.8);border:1px solid rgba(189,0,255,.2);border-radius:14px}
+input,textarea,select{background:#1a1a2e;border:1px solid rgba(189,0,255,.25);color:#fff;border-radius:10px;padding:10px 13px;width:100%;font-size:13px;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:#bd00ff}
+textarea{resize:none}
+button{cursor:pointer;border:none;outline:none;font-family:inherit;font-size:13px}
+.btn{padding:10px 16px;border-radius:10px;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-p{background:#bd00ff;color:#fff;width:100%}
+.btn-g{background:rgba(255,255,255,.08);color:#c4b5fd;width:100%}
+.btn-sm{padding:5px 12px;border-radius:8px;font-size:12px}
+.btn-green{background:rgba(34,197,94,.25);color:#4ade80}
+.btn-red{background:rgba(239,68,68,.2);color:#f87171}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.b-g{background:rgba(34,197,94,.18);color:#4ade80}
+.b-y{background:rgba(234,179,8,.18);color:#fbbf24}
+.b-p{background:rgba(189,0,255,.2);color:#d8b4fe}
+.b-r{background:rgba(239,68,68,.18);color:#f87171}
+.b-b{background:rgba(59,130,246,.2);color:#93c5fd}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;background:#7b2fff;color:#fff}
+.tab-bar{background:#0d0e1f;border-top:1px solid rgba(189,0,255,.2);display:flex;justify-content:space-around;padding:8px 0 14px;position:sticky;bottom:0;z-index:50}
+.tbtn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 14px;border-radius:8px;color:#6b7280;font-size:10px;background:none;position:relative}
+.tbtn.on{color:#bd00ff}
+.tbtn svg{width:20px;height:20px}
+.scroll{flex:1;overflow-y:auto;padding:14px}
+.card{background:rgba(30,30,49,.75);border:1px solid rgba(189,0,255,.18);border-radius:13px;padding:13px;margin-bottom:10px}
+.lbl{font-size:11px;color:#9ca3af;margin:10px 0 5px}
+.dot{width:8px;height:8px;background:#bd00ff;border-radius:50%;position:absolute;top:2px;right:2px}
+.divider{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
+.chat-wrap{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.bubble-me{align-self:flex-end;background:#bd00ff;color:#fff;padding:8px 12px;border-radius:14px 14px 2px 14px;max-width:72%;font-size:13px;line-height:1.5}
+.bubble-them{align-self:flex-start;background:rgba(255,255,255,.1);color:#e9d5ff;padding:8px 12px;border-radius:14px 14px 14px 2px;max-width:72%;font-size:13px;line-height:1.5}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;background:#0d0e1f;border-top:1px solid rgba(189,0,255,.15)}
+.chat-input-row input{flex:1;padding:8px 12px;border-radius:20px}
+.send-btn{background:#bd00ff;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap}
+.pending-banner{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;padding:10px 13px;margin-bottom:10px;font-size:12px;color:#fbbf24}
+.apply-card{background:rgba(189,0,255,.08);border:1px solid rgba(189,0,255,.3);border-radius:12px;padding:12px;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pg-login" class="page active" style="align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:30px;font-weight:800;color:#bd00ff;letter-spacing:2px">GAME_SYNC</div>
+      <div style="font-size:12px;color:#a78bfa;margin-top:4px">电竞陪玩 · 任务接单平台</div>
+      <div id="admin-tip" style="font-size:11px;color:#4ade80;margin-top:6px"></div>
+    </div>
+    <div class="glass" style="padding:18px">
+      <div class="lbl" style="margin-top:0">手机号</div>
+      <input id="l-phone" placeholder="11位手机号" maxlength="11">
+      <div class="lbl">密码</div>
+      <input id="l-pwd" type="password" placeholder="密码">
+      <div style="height:14px"></div>
+      <button class="btn btn-p" onclick="doLogin()">登录</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-g" onclick="goPg('pg-reg')">注册账号</button>
+      <button onclick="goPg('pg-admin')" style="background:none;color:#6b7280;width:100%;margin-top:8px;padding:6px;font-size:11px">管理员入口</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="pg-reg" class="page" style="align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:20px;font-size:22px;font-weight:700;color:#bd00ff">创建账号</div>
+    <div class="glass" style="padding:18px">
+      <div class="lbl" style="margin-top:0">手机号</div>
+      <input id="r-phone" placeholder="11位手机号" maxlength="11">
+      <div class="lbl">昵称</div>
+      <input id="r-nick" placeholder="你的昵称">
+      <div class="lbl">身份</div>
+      <select id="r-role">
+        <option value="user">普通用户（发布任务 / 选陪玩）</option>
+        <option value="peiban">陪玩（接受任务 / 申请认证）</option>
+      </select>
+      <div style="height:14px"></div>
+      <button class="btn btn-p" onclick="doReg()">提交注册</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-g" onclick="goPg('pg-login')">返回登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="pg-admin" class="page" style="align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:20px;font-size:20px;font-weight:700;color:#bd00ff">管理员后台</div>
+    <div class="glass" style="padding:16px;margin-bottom:10px">
+      <input id="ap-pwd" type="password" placeholder="管理员密码" style="margin-bottom:10px">
+      <button class="btn btn-p" onclick="doAdminLogin()">进入后台</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-g" onclick="goPg('pg-login')">返回</button>
+    </div>
+    <div id="admin-panel" style="display:none">
+      <div class="glass" style="padding:14px;margin-bottom:10px">
+        <div style="font-weight:600;color:#d8b4fe;margin-bottom:10px">用户列表</div>
+        <div id="admin-users" style="font-size:12px"></div>
+      </div>
+      <div class="glass" style="padding:14px;margin-bottom:10px">
+        <div style="font-weight:600;color:#d8b4fe;margin-bottom:8px">设置密码</div>
+        <input id="ap-phone" placeholder="手机号" style="margin-bottom:8px">
+        <input id="ap-np" placeholder="新密码" style="margin-bottom:10px">
+        <button class="btn btn-p" onclick="doSetPwd()">保存</button>
+      </div>
+      <div class="glass" style="padding:14px;margin-bottom:10px">
+        <div style="font-weight:600;color:#d8b4fe;margin-bottom:8px">审核陪玩申请</div>
+        <div id="admin-applies"></div>
+      </div>
+      <div class="glass" style="padding:14px">
+        <div style="font-weight:600;color:#d8b4fe;margin-bottom:8px">发布公告</div>
+        <textarea id="ap-notice" rows="2" placeholder="公告内容" style="margin-bottom:8px"></textarea>
+        <button class="btn btn-p" onclick="doNotice()">发布</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="pg-main" class="page" style="height:100vh">
+  <div style="flex:1;overflow:hidden;position:relative">
+
+    <!-- 大厅 -->
+    <div id="tab-hall" class="scroll" style="height:100%;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:18px;font-weight:700;color:#e9d5ff">游戏大厅</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="hall-nick" style="font-size:12px;color:#a78bfa"></span>
+          <button class="btn btn-sm btn-red" onclick="doLogout()">退出</button>
+        </div>
+      </div>
+      <div id="hall-notice" style="display:none;margin-bottom:12px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <button onclick="openSheet('sh-post')" style="background:rgba(189,0,255,.2);border:1px solid rgba(189,0,255,.4);border-radius:12px;padding:14px;color:#fff;text-align:left">
+          <div style="font-size:16px;margin-bottom:4px">📋</div>
+          <div style="font-weight:600">发布任务</div>
+          <div style="font-size:11px;color:#a78bfa;margin-top:2px">悬赏找陪玩</div>
+        </button>
+        <button onclick="goTab('tab-pw')" style="background:rgba(123,47,255,.2);border:1px solid rgba(123,47,255,.4);border-radius:12px;padding:14px;color:#fff;text-align:left">
+          <div style="font-size:16px;margin-bottom:4px">🎮</div>
+          <div style="font-weight:600">选陪玩</div>
+          <div style="font-size:11px;color:#93c5fd;margin-top:2px">浏览并联系</div>
+        </button>
+        <button onclick="goTab('tab-tasks')" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:14px;color:#fff;text-align:left">
+          <div style="font-size:16px;margin-bottom:4px">📌</div>
+          <div style="font-weight:600">任务大厅</div>
+          <div style="font-size:11px;color:#86efac;margin-top:2px">接单赚钱</div>
+        </button>
+        <button onclick="goTab('tab-me')" style="background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.28);border-radius:12px;padding:14px;color:#fff;text-align:left">
+          <div style="font-size:16px;margin-bottom:4px">👤</div>
+          <div style="font-weight:600">我的</div>
+          <div style="font-size:11px;color:#fbbf24;margin-top:2px">资料 / 收益</div>
+        </button>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#e9d5ff;margin-bottom:8px">最新任务</div>
+      <div id="hall-tasks"></div>
+    </div>
+
+    <!-- 陪玩大厅 -->
+    <div id="tab-pw" class="scroll" style="height:100%;overflow-y:auto;display:none">
+      <div style="font-size:18px;font-weight:700;color:#e9d5ff;margin-bottom:12px">陪玩大厅</div>
+      <input id="pw-q" placeholder="搜索游戏/昵称..." style="margin-bottom:12px" oninput="renderPW()">
+      <div id="pw-list"></div>
+    </div>
+
+    <!-- 任务大厅 -->
+    <div id="tab-tasks" class="scroll" style="height:100%;overflow-y:auto;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:18px;font-weight:700;color:#e9d5ff">任务大厅</div>
+        <select id="tf" onchange="renderTasks()" style="background:#1a1a2e;border:1px solid rgba(189,0,255,.25);color:#a78bfa;border-radius:8px;padding:4px 8px;font-size:11px;outline:none;width:auto">
+          <option value="all">全部</option>
+          <option value="open">待接单</option>
+          <option value="taken">进行中</option>
+          <option value="done">已完成</option>
+        </select>
+      </div>
+      <div id="task-list"></div>
+    </div>
+
+    <!-- 消息 -->
+    <div id="tab-msg" class="scroll" style="height:100%;overflow-y:auto;display:none">
+      <div style="font-size:18px;font-weight:700;color:#e9d5ff;margin-bottom:12px">消息</div>
+      <div id="conv-list"></div>
+    </div>
+
+    <!-- 我的 -->
+    <div id="tab-me" class="scroll" style="height:100%;overflow-y:auto;display:none">
+      <div style="font-size:18px;font-weight:700;color:#e9d5ff;margin-bottom:12px">我的</div>
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="avatar" id="me-av" style="width:50px;height:50px;font-size:18px"></div>
+          <div>
+            <div style="font-size:16px;font-weight:700" id="me-nick"></div>
+            <div style="font-size:11px;color:#9ca3af" id="me-phone"></div>
+            <div style="margin-top:4px" id="me-badge"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;background:rgba(189,0,255,.1);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#d8b4fe" id="st-tasks">0</div>
+          <div style="font-size:10px;color:#9ca3af">任务</div>
+        </div>
+        <div style="flex:1;background:rgba(34,197,94,.1);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#4ade80" id="st-income">¥0</div>
+          <div style="font-size:10px;color:#9ca3af">收入</div>
+        </div>
+        <div style="flex:1;background:rgba(234,179,8,.1);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#fbbf24" id="st-rating">-</div>
+          <div style="font-size:10px;color:#9ca3af">评分</div>
+        </div>
+      </div>
+      <!-- 申请陪玩 -->
+      <div id="apply-section">
+        <div class="card" style="margin-bottom:10px">
+          <div style="font-weight:600;color:#d8b4fe;margin-bottom:10px">申请陪玩认证</div>
+          <div id="apply-status-banner"></div>
+          <div id="apply-form">
+            <div class="lbl" style="margin-top:0">擅长游戏（逗号分隔）</div>
+            <input id="pf-games" placeholder="王者荣耀,英雄联盟">
+            <div class="lbl">个人介绍</div>
+            <textarea id="pf-intro" rows="3" placeholder="段位、风格、接单时间..."></textarea>
+            <div class="lbl">每小时单价（元）</div>
+            <input id="pf-price" type="number" placeholder="例：50">
+            <div class="lbl">收款方式</div>
+            <input id="pf-pay" placeholder="微信/支付宝">
+            <div style="height:12px"></div>
+            <button class="btn btn-p" onclick="applyPeiban()">提交申请</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-weight:600;color:#d8b4fe;margin-bottom:8px">收益记录</div>
+        <div id="income-list"></div>
+      </div>
+      <button onclick="doLogout()" style="background:rgba(239,68,68,.15);color:#f87171;padding:10px;border-radius:10px;width:100%;border:1px solid rgba(239,68,68,.25)">退出登录</button>
+    </div>
+
+    <!-- 聊天页 -->
+    <div id="tab-chat" style="height:100%;display:none;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0d0e1f;border-bottom:1px solid rgba(189,0,255,.15)">
+        <button onclick="goTab(chatPrevTab)" style="background:none;color:#a78bfa;font-size:20px;padding:0 4px">‹</button>
+        <div class="avatar" id="chat-av" style="width:34px;height:34px;font-size:13px"></div>
+        <div>
+          <div style="font-weight:600" id="chat-name"></div>
+          <div style="font-size:11px;color:#9ca3af" id="chat-sub"></div>
+        </div>
+        <div id="chat-task-badge" style="margin-left:auto"></div>
+      </div>
+      <div class="chat-wrap" id="chat-msgs"></div>
+      <div id="task-accept-bar" style="display:none;padding:10px 12px;background:rgba(34,197,94,.08);border-top:1px solid rgba(34,197,94,.2)">
+        <div style="font-size:12px;color:#86efac;margin-bottom:8px">📌 对方请求你接单此任务</div>
+        <div id="task-accept-info" style="font-size:13px;color:#e9d5ff;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-green" style="flex:1" onclick="acceptTaskFromChat()">接受任务</button>
+          <button class="btn btn-sm btn-red" style="flex:1" onclick="declineTaskFromChat()">拒绝</button>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input id="chat-in" placeholder="发送消息..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="send-btn" onclick="sendChat()">发送</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tab-bar" id="main-tabs">
+    <button class="tbtn on" id="tb-hall" onclick="goTab('tab-hall')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>大厅
+    </button>
+    <button class="tbtn" id="tb-pw" onclick="goTab('tab-pw')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>陪玩
+    </button>
+    <button class="tbtn" id="tb-tasks" onclick="goTab('tab-tasks')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>任务
+    </button>
+    <button class="tbtn" id="tb-msg" onclick="goTab('tab-msg')" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div class="dot" id="msg-dot" style="display:none"></div>消息
+    </button>
+    <button class="tbtn" id="tb-me" onclick="goTab('tab-me')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>我的
+    </button>
+  </div>
+</div>
+
+<!-- BOTTOM SHEET -->
+<div id="sheet-overlay" onclick="closeSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80"></div>
+<div id="sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#111225;border-top:1px solid rgba(189,0,255,.3);border-radius:20px 20px 0 0;padding:20px;z-index:90;max-height:85vh;overflow-y:auto">
+  <div id="sheet-content"></div>
+</div>
+
+<script>
+const ADMIN="admin888";
+let DB={
+  users:JSON.parse(localStorage.getItem("gs2_u")||"{}"),
+  tasks:JSON.parse(localStorage.getItem("gs2_t")||"[]"),
+  peiwans:JSON.parse(localStorage.getItem("gs2_pw")||"{}"),
+  applies:JSON.parse(localStorage.getItem("gs2_ap")||"{}"),
+  chats:JSON.parse(localStorage.getItem("gs2_ch")||"{}"),
+  notices:JSON.parse(localStorage.getItem("gs2_no")||"[]"),
+  incomes:JSON.parse(localStorage.getItem("gs2_in")||"{}"),
+  ratings:JSON.parse(localStorage.getItem("gs2_ra")||"{}")
+};
+let me="",chatWith="",chatPrevTab="tab-msg",pendingTaskId=null,curSheet="";
+
+function sv(){['u','t','pw','ap','ch','no','in','ra'].forEach((k,i)=>{
+  const keys=['users','tasks','peiwans','applies','chats','notices','incomes','ratings'];
+  localStorage.setItem("gs2_"+k,JSON.stringify(DB[keys[i]]));
+})}
+
+function goPg(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function goTab(id){
+  const tabs=['tab-hall','tab-pw','tab-tasks','tab-msg','tab-me','tab-chat'];
+  const tbs=['tb-hall','tb-pw','tb-tasks','tb-msg','tb-me'];
+  tabs.forEach(t=>{const el=document.getElementById(t);if(el)el.style.display='none'});
+  document.getElementById(id).style.display=(id==='tab-chat')?'flex':'block';
+  tbs.forEach(t=>document.getElementById(t).classList.remove('on'));
+  const map={'tab-hall':'tb-hall','tab-pw':'tb-pw','tab-tasks':'tb-tasks','tab-msg':'tb-msg','tab-me':'tb-me'};
+  if(map[id])document.getElementById(map[id]).classList.add('on');
+  const mt=document.getElementById('main-tabs');
+  mt.style.display=(id==='tab-chat')?'none':'flex';
+  if(id==='tab-hall')renderHall();
+  if(id==='tab-pw')renderPW();
+  if(id==='tab-tasks')renderTasks();
+  if(id==='tab-msg')renderConvList();
+  if(id==='tab-me')renderMe();
+}
+function openSheet(id){
+  curSheet=id;
+  document.getElementById('sheet-overlay').style.display='block';
+  document.getElementById('sheet').style.display='block';
+  renderSheet(id);
+}
+function closeSheet(){document.getElementById('sheet-overlay').style.display='none';document.getElementById('sheet').style.display='none'}
+
+function renderSheet(id){
+  const el=document.getElementById('sheet-content');
+  if(id==='sh-post'){
+    el.innerHTML=`<div style="font-size:17px;font-weight:700;color:#e9d5ff;margin-bottom:14px">发布任务</div>
+    <div class="lbl" style="margin-top:0">任务标题</div><input id="t-title" placeholder="例：王者荣耀上分陪练">
+    <div class="lbl">游戏</div><input id="t-game" placeholder="例：王者荣耀">
+    <div class="lbl">详情</div><textarea id="t-desc" rows="2" placeholder="需求说明..."></textarea>
+    <div class="lbl">悬赏金额（元）</div><input id="t-money" type="number" placeholder="50">
+    <div class="lbl">所需时长</div><input id="t-dur" placeholder="2小时">
+    <div style="height:12px"></div>
+    <button class="btn btn-p" onclick="doPost()">发布任务</button>`;
+  }
+}
+
+// ===== 注册登录 =====
+function doReg(){
+  const p=document.getElementById('r-phone').value.trim(),n=document.getElementById('r-nick').value.trim(),r=document.getElementById('r-role').value;
+  if(p.length!==11){alert('请输入11位手机号');return}
+  if(!n){alert('请填写昵称');return}
+  if(DB.users[p]){alert('已注册');return}
+  DB.users[p]={pwd:'',nick:n,role:r};
+  DB.chats[p]={};
+  pushSys(p,'欢迎加入 GAME_SYNC！请联系管理员开通密码后登录。');
+  sv();
+  alert('注册成功！请联系管理员开通密码');
+  goPg('pg-login');
+}
+function doLogin(){
+  const p=document.getElementById('l-phone').value.trim(),w=document.getElementById('l-pwd').value;
+  if(!DB.users[p]||DB.users[p].pw!==w){alert('账号或密码错误');return}
+  me=p;localStorage.setItem('gs2_me',p);enterMain();
+}
+function doLogout(){me='';localStorage.removeItem('gs2_me');goPg('pg-login')}
+function enterMain(){goPg('pg-main');goTab('tab-hall');checkDot()}
+
+// ===== 管理员 =====
+function doAdminLogin(){
+  if(document.getElementById('ap-pwd').value!==ADMIN){alert('密码错误');return}
+  document.getElementById('admin-panel').style.display='block';
+  renderAdminUsers();renderAdminApplies();
+}
+function renderAdminUsers(){
+  let h='';
+  for(const p in DB.users){
+    const u=DB.users[p];
+    h+=`<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="font-weight:600">${u.nick} <span style="color:#9ca3af;font-size:10px">(${u.role==='peiban'?'陪玩':'用户'})</span></div>
+      <div style="font-size:11px;color:#6b7280">${p} | 密码: ${u.pw||'未设'}</div></div>`;
+  }
+  document.getElementById('admin-users').innerHTML=h||'<div style="color:#6b7280">暂无用户</div>';
+}
+function doSetPwd(){
+  const p=document.getElementById('ap-phone').value.trim(),w=document.getElementById('ap-np').value;
+  if(!p||!w){alert('请填写完整');return}
+  if(!DB.users[p]){alert('用户不存在');return}
+  DB.users[p].pw=w;sv();
+  document.getElementById('admin-tip').textContent=`账号 ${p} 密码: ${w}`;
+  pushSys(p,'管理员已为您设置密码，请妥善保管。');
+  renderAdminUsers();alert('设置成功');
+}
+function renderAdminApplies(){
+  const el=document.getElementById('admin-applies');
+  const pending=Object.entries(DB.applies).filter(([,v])=>v.status==='pending');
+  if(!pending.length){el.innerHTML='<div style="color:#6b7280;font-size:12px">暂无待审核申请</div>';return}
+  el.innerHTML=pending.map(([phone,ap])=>`
+    <div class="apply-card">
+      <div style="font-weight:600">${DB.users[phone]?DB.users[phone].nick:phone}</div>
+      <div style="font-size:11px;color:#9ca3af">${phone}</div>
+      <div style="font-size:12px;color:#d1d5db;margin:4px 0">游戏：${ap.games.join('、')} | ¥${ap.price}/h</div>
+      <div style="font-size:12px;color:#d1d5db;margin-bottom:8px">${ap.intro}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-green" style="flex:1" onclick="reviewApply('${phone}',true)">通过</button>
+        <button class="btn btn-sm btn-red" style="flex:1" onclick="reviewApply('${phone}',false)">拒绝</button>
+      </div>
+    </div>`).join('');
+}
+function reviewApply(phone,pass){
+  DB.applies[phone].status=pass?'approved':'rejected';
+  if(pass){
+    DB.peiwans[phone]=DB.applies[phone];
+    if(DB.users[phone])DB.users[phone].role='peiban';
+    pushSys(phone,'恭喜！您的陪玩申请已通过审核，现在可以在陪玩大厅展示了！');
+  }else{
+    pushSys(phone,'您的陪玩申请未通过审核，如有疑问请联系管理员。');
+  }
+  sv();renderAdminApplies();alert(pass?'已通过':'已拒绝');
+}
+function doNotice(){
+  const t=document.getElementById('ap-notice').value.trim();
+  if(!t){alert('请输入内容');return}
+  DB.notices.push({text:t,time:Date.now()});sv();alert('公告已发布');
+}
+
+// ===== 申请陪玩 =====
+function applyPeiban(){
+  const games=document.getElementById('pf-games').value.trim();
+  const intro=document.getElementById('pf-intro').value.trim();
+  const price=parseFloat(document.getElementById('pf-price').value)||0;
+  const pay=document.getElementById('pf-pay').value.trim();
+  if(!games||!intro){alert('游戏和介绍为必填项');return}
+  if(DB.applies[me]&&DB.applies[me].status==='pending'){alert('您已提交申请，请等待审核');return}
+  DB.applies[me]={games:games.split(',').map(x=>x.trim()).filter(Boolean),intro,price,pay,status:'pending',time:Date.now()};
+  sv();
+  alert('申请已提交！请等待管理员审核。');
+  renderMe();
+}
+
+// ===== 任务 =====
+function doPost(){
+  const title=document.getElementById('t-title').value.trim(),game=document.getElementById('t-game').value.trim(),
+    desc=document.getElementById('t-desc').value.trim(),money=parseFloat(document.getElementById('t-money').value)||0,
+    dur=document.getElementById('t-dur').value.trim();
+  if(!title||!money){alert('标题和金额必填');return}
+  DB.tasks.push({id:Date.now(),poster:me,title,game,desc,money,dur,status:'open',taker:'',rated:false});
+  sv();closeSheet();alert('发布成功！');renderHall();renderTasks();
+}
+function renderTasks(){
+  const filter=(document.getElementById('tf')||{}).value||'all';
+  const el=document.getElementById('task-list');
+  let list=[...DB.tasks].reverse();
+  if(filter!=='all')list=list.filter(t=>t.status===filter);
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#6b7280">暂无任务</div>';return}
+  const sm={open:'b-g',taken:'b-y',done:'b-p'};const st={open:'待接单',taken:'进行中',done:'已完成'};
+  el.innerHTML=list.map(t=>{
+    const u=DB.users[t.poster]||{nick:'匿名'};
+    const myRole=DB.users[me]?DB.users[me].role:'';
+    let actionBtn='';
+    if(t.status==='open'&&t.poster!==me&&myRole==='peiban'){
+      actionBtn=`<button class="btn btn-sm btn-green" onclick="event.stopPropagation();openTaskAccept(${t.id})">接受任务</button>`;
+    }else if(t.status==='taken'&&t.poster===me){
+      actionBtn=`<button class="btn btn-sm" style="background:rgba(99,102,241,.3);color:#a5b4fc" onclick="event.stopPropagation();completeTask(${t.id})">确认完成</button>`;
+    }else if(t.status==='done'&&t.poster===me&&!t.rated){
+      actionBtn=`<button class="btn btn-sm" style="background:rgba(234,179,8,.2);color:#fbbf24" onclick="event.stopPropagation();openRating(${t.id})">评价</button>`;
+    }
+    return`<div class="card" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-weight:600;font-size:14px;color:#e9d5ff;flex:1;margin-right:8px">${t.title}</div>
+        <span class="badge ${sm[t.status]||'b-p'}">${st[t.status]||''}</span>
+      </div>
+      ${t.game?`<span class="badge b-b" style="margin-bottom:6px">${t.game}</span>`:''}
+      <div style="font-size:12px;color:#9ca3af">${t.desc||''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div style="font-size:11px;color:#6b7280">发布：${u.nick}${t.dur?' · '+t.dur:''}</div>
+        <div style="font-size:15px;font-weight:700;color:#bd00ff">¥${t.money}</div>
+      </div>
+      ${actionBtn?`<div style="margin-top:8px">${actionBtn}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function openTaskAccept(id){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  const u=DB.users[t.poster]||{nick:'匿名'};
+  // 打开与发布人的聊天，并显示接单确认
+  pendingTaskId=id;
+  openChat(t.poster,'tab-tasks',id);
+}
+function acceptTaskFromChat(){
+  if(!pendingTaskId)return;
+  const t=DB.tasks.find(x=>x.id===pendingTaskId);
+  if(!t||t.status!=='open'){alert('任务已不可接单');hideTaskBar();return}
+  t.status='taken';t.taker=me;sv();
+  const myNick=DB.users[me]?DB.users[me].nick:me;
+  addChatMsg(me,t.poster,`我接受了您的任务《${t.title}》，请确认！我们开始吧 🎮`);
+  pushSys(t.poster,`您的任务《${t.title}》已被 ${myNick} 接单！请在聊天中沟通细节。`);
+  hideTaskBar();renderTasks();renderConvList();checkDot();
+  alert('接单成功！');
+}
+function declineTaskFromChat(){pendingTaskId=null;hideTaskBar()}
+function hideTaskBar(){document.getElementById('task-accept-bar').style.display='none';pendingTaskId=null}
+function completeTask(id){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  t.status='done';
+  if(!DB.incomes[t.taker])DB.incomes[t.taker]=[];
+  DB.incomes[t.taker].push({taskId:id,title:t.title,amount:t.money,time:Date.now()});
+  pushSys(t.taker,`任务《${t.title}》已完成，¥${t.money} 已计入收益！`);
+  sv();renderTasks();checkDot();alert('任务已完成！');
+}
+function openRating(id){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  const taker=DB.users[t.taker]||{nick:t.taker};
+  let selStar=0;
+  openSheet('sh-rate');
+  document.getElementById('sheet-content').innerHTML=`
+    <div style="font-size:17px;font-weight:700;color:#e9d5ff;margin-bottom:14px">评价陪玩</div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-weight:600;font-size:15px">${taker.nick}</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:10px" id="stars">
+        ${[1,2,3,4,5].map(n=>`<span onclick="setStar(${n},${id})" style="font-size:28px;cursor:pointer;color:#374151" id="s${n}">★</span>`).join('')}
+      </div>
+    </div>
+    <textarea id="rate-comment" rows="3" placeholder="写下你的评价..." style="margin-bottom:12px"></textarea>
+    <button class="btn btn-p" onclick="submitRating(${id})">提交评价</button>`;
+}
+let selectedStar=0;
+function setStar(n){
+  selectedStar=n;
+  for(let i=1;i<=5;i++){const s=document.getElementById('s'+i);if(s)s.style.color=i<=n?'#fbbf24':'#374151';}
+}
+function submitRating(id){
+  if(!selectedStar){alert('请选择星级');return}
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  if(!DB.ratings[t.taker])DB.ratings[t.taker]=[];
+  DB.ratings[t.taker].push({score:selectedStar,comment:(document.getElementById('rate-comment')||{}).value||'',time:Date.now()});
+  t.rated=true;sv();closeSheet();alert('评价成功！');
+}
+
+// ===== 陪玩大厅 =====
+function renderPW(){
+  const el=document.getElementById('pw-list');
+  const q=(document.getElementById('pw-q')||{}).value||'';
+  let list=Object.entries(DB.peiwans).filter(([,pw])=>pw.status==='approved').map(([ph,pw])=>({ph,pw,u:DB.users[ph]||{nick:ph}}));
+  if(q)list=list.filter(({pw,u})=>pw.games.some(g=>g.includes(q))||u.nick.includes(q));
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#6b7280">暂无陪玩</div>';return}
+  el.innerHTML=list.map(({ph,pw,u})=>{
+    const rats=DB.ratings[ph]||[];
+    const avg=rats.length?(rats.reduce((a,r)=>a+r.score,0)/rats.length).toFixed(1):'-';
+    return`<div class="card" style="cursor:pointer" onclick="openPWDetail('${ph}')">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="avatar" style="width:42px;height:42px;font-size:15px">${u.nick[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600;font-size:14px">${u.nick}</div>
+            ${avg!=='-'?`<div style="font-size:12px;color:#fbbf24">★ ${avg}</div>`:''}
+          </div>
+          <div style="margin:4px 0">${pw.games.map(g=>`<span class="badge b-b" style="margin-right:3px">${g}</span>`).join('')}</div>
+          <div style="font-size:12px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pw.intro}</div>
+          ${pw.price?`<div style="font-size:13px;font-weight:600;color:#bd00ff;margin-top:4px">¥${pw.price}/小时</div>`:''}
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-p" style="padding:7px" onclick="event.stopPropagation();openChat('${ph}','tab-pw')">联系陪玩</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openPWDetail(ph){
+  const pw=DB.peiwans[ph];if(!pw)return;
+  const u=DB.users[ph]||{nick:ph};
+  const rats=DB.ratings[ph]||[];
+  const avg=rats.length?(rats.reduce((a,r)=>a+r.score,0)/rats.length).toFixed(1):'-';
+  openSheet('sh-pw-'+ph);
+  document.getElementById('sheet-content').innerHTML=`
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+      <div class="avatar" style="width:52px;height:52px;font-size:20px">${u.nick[0]}</div>
+      <div>
+        <div style="font-size:17px;font-weight:700">${u.nick}</div>
+        ${avg!=='-'?`<div style="color:#fbbf24;font-size:13px">★ ${avg} <span style="color:#6b7280;font-size:11px">(${rats.length}条评价)</span></div>`:'<div style="font-size:11px;color:#6b7280">暂无评价</div>'}
+        ${pw.price?`<div style="color:#bd00ff;font-weight:600;margin-top:2px">¥${pw.price}/小时</div>`:''}
+      </div>
+    </div>
+    <div style="margin-bottom:10px">${pw.games.map(g=>`<span class="badge b-b" style="margin-right:4px">${g}</span>`).join('')}</div>
+    <div class="divider"></div>
+    <div style="font-size:13px;color:#d1d5db;line-height:1.7;margin-bottom:12px">${pw.intro}</div>
+    ${rats.slice(-3).reverse().map(r=>`<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)"><div style="color:#fbbf24;font-size:12px">${'★'.repeat(r.score)}${'☆'.repeat(5-r.score)}</div><div style="font-size:12px;color:#9ca3af">${r.comment||'无评语'}</div></div>`).join('')}
+    <div style="height:12px"></div>
+    <button class="btn btn-p" onclick="closeSheet();openChat('${ph}','tab-pw')">联系陪玩</button>`;
+}
+
+// ===== 聊天 =====
+function getChatKey(a,b){return[a,b].sort().join('_')}
+function openChat(target,prevTab,taskId){
+  chatWith=target;
+  chatPrevTab=prevTab||'tab-msg';
+  const u=DB.users[target]||{nick:target};
+  document.getElementById('chat-name').textContent=u.nick;
+  document.getElementById('chat-av').textContent=u.nick[0];
+  const pw=DB.peiwans[target];
+  document.getElementById('chat-sub').textContent=pw?`陪玩 · ¥${pw.price}/h`:'用户';
+  if(taskId){
+    const t=DB.tasks.find(x=>x.id===taskId);
+    if(t){
+      pendingTaskId=taskId;
+      const bar=document.getElementById('task-accept-bar');
+      bar.style.display='block';
+      document.getElementById('task-accept-info').textContent=`《${t.title}》 ¥${t.money} ${t.dur?'· '+t.dur:''}`;
+      addChatMsg(me,target,`嘿！我看到了你的任务《${t.title}》，¥${t.money}，我想接单！`);
+    }
+  } else {
+    hideTaskBar();
+  }
+  renderChatMsgs();
+  markRead(target);
+  goTab('tab-chat');
+}
+function renderChatMsgs(){
+  const key=getChatKey(me,chatWith);
+  const msgs=(DB.chats[key]||[]);
+  const el=document.getElementById('chat-msgs');
+  if(!msgs.length){el.innerHTML='<div style="text-align:center;color:#6b7280;padding:20px;font-size:12px">开始聊天吧～</div>';return}
+  el.innerHTML=msgs.map(m=>`
+    <div>
+      <div class="${m.from===me?'bubble-me':'bubble-them'}">${m.text}</div>
+      <div style="font-size:10px;color:#4b5563;margin:2px ${m.from===me?'0':'0'} 4px;text-align:${m.from===me?'right':'left'}">${new Date(m.time).toLocaleTimeString('zh',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function sendChat(){
+  const inp=document.getElementById('chat-in');
+  const text=inp.value.trim();if(!text)return;
+  addChatMsg(me,chatWith,text);
+  inp.value='';
+  renderChatMsgs();checkDot();
+}
+function addChatMsg(from,to,text){
+  const key=getChatKey(from,to);
+  if(!DB.chats[key])DB.chats[key]=[];
+  DB.chats[key].push({from,text,time:Date.now(),read:from===me});
+  sv();
+  if(document.getElementById('tab-chat').style.display==='flex'&&chatWith===to&&from===me){renderChatMsgs()}
+}
+function markRead(target){
+  const key=getChatKey(me,target);
+  if(DB.chats[key])DB.chats[key].forEach(m=>{if(m.from===target)m.read=true});
+  sv();checkDot();
+}
+function checkDot(){
+  let unread=false;
+  for(const key in DB.chats){
+    if(key.includes(me)){
+      unread=DB.chats[key].some(m=>m.from!==me&&!m.read);
+      if(unread)break;
+    }
+  }
+  const k=getChatKey(me,'__sys__');
+  if(!unread&&DB.chats[k])unread=DB.chats[k].some(m=>!m.read);
+  document.getElementById('msg-dot').style.display=unread?'block':'none';
+}
+function pushSys(phone,text){
+  const key=getChatKey(phone,'__sys__');
+  if(!DB.chats[key])DB.chats[key]=[];
+  DB.chats[key].push({from:'__sys__',text,time:Date.now(),read:false});
+  sv();
+  if(phone===me)checkDot();
+}
+function renderConvList(){
+  const el=document.getElementById('conv-list');
+  let convs=[];
+  for(const key in DB.chats){
+    if(!key.includes(me))continue;
+    const msgs=DB.chats[key];if(!msgs.length)continue;
+    const other=key.replace(me,'').replace('_','').replace('__sys__','__sys__').trim()||'__sys__';
+    const otherPhone=key.split('_').find(p=>p!==me)||'__sys__';
+    const last=msgs[msgs.length-1];
+    const unread=msgs.filter(m=>m.from!==me&&!m.read).length;
+    const u=otherPhone==='__sys__'?{nick:'系统消息'}:(DB.users[otherPhone]||{nick:otherPhone});
+    convs.push({key,phone:otherPhone,u,last,unread});
+  }
+  convs.sort((a,b)=>b.last.time-a.last.time);
+  if(!convs.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#6b7280">暂无消息</div>';return}
+  el.innerHTML=convs.map(c=>`
+    <div class="card" style="cursor:pointer;display:flex;gap:10px;align-items:center" onclick="${c.phone==='__sys__'?`openSysChat()`:`openChat('${c.phone}','tab-msg')`}">
+      <div class="avatar" style="width:40px;height:40px;font-size:14px;${c.phone==='__sys__'?'background:#4b5563':''}">${c.phone==='__sys__'?'系':c.u.nick[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between">
+          <div style="font-weight:600;font-size:14px">${c.u.nick}</div>
+          <div style="font-size:10px;color:#6b7280">${new Date(c.last.time).toLocaleTimeString('zh',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="font-size:12px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.last.text}</div>
+      </div>
+      ${c.unread?`<div style="width:18px;height:18px;background:#bd00ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">${c.unread}</div>`:''}
+    </div>`).join('');
+  markRead('__sys__');
+}
+function openSysChat(){
+  chatWith='__sys__';chatPrevTab='tab-msg';
+  document.getElementById('chat-name').textContent='系统消息';
+  document.getElementById('chat-av').textContent='系';
+  document.getElementById('chat-av').style.background='#4b5563';
+  document.getElementById('chat-sub').textContent='官方通知';
+  hideTaskBar();
+  renderSysMsgs();markRead('__sys__');
+  goTab('tab-chat');
+}
+function renderSysMsgs(){
+  const key=getChatKey(me,'__sys__');
+  const msgs=DB.chats[key]||[];
+  const el=document.getElementById('chat-msgs');
+  if(!msgs.length){el.innerHTML='<div style="text-align:center;color:#6b7280;padding:20px;font-size:12px">暂无系统消息</div>';return}
+  el.innerHTML=msgs.map(m=>`<div><div class="bubble-them" style="background:rgba(99,102,241,.15)">${m.text}</div><div style="font-size:10px;color:#4b5563;margin:2px 0 4px">${new Date(m.time).toLocaleTimeString('zh',{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+// ===== 我的 =====
+function renderMe(){
+  const u=DB.users[me];if(!u)return;
+  document.getElementById('me-av').textContent=u.nick[0];
+  document.getElementById('me-nick').textContent=u.nick;
+  document.getElementById('me-phone').textContent=me;
+  document.getElementById('me-badge').innerHTML=u.role==='peiban'?'<span class="badge b-p">认证陪玩</span>':'<span class="badge b-g">普通用户</span>';
+  const myTasks=DB.tasks.filter(t=>t.poster===me).length;
+  document.getElementById('st-tasks').textContent=myTasks;
+  const myInc=DB.incomes[me]||[];
+  document.getElementById('st-income').textContent='¥'+(myInc.reduce((a,r)=>a+r.amount,0));
+  const rats=DB.ratings[me]||[];
+  document.getElementById('st-rating').textContent=rats.length?(rats.reduce((a,r)=>a+r.score,0)/rats.length).toFixed(1):'-';
+  const ap=DB.applies[me];
+  const banner=document.getElementById('apply-status-banner');
+  const form=document.getElementById('apply-form');
+  if(u.role==='peiban'){
+    banner.innerHTML='<div class="b-p badge" style="margin-bottom:10px">✓ 已认证陪玩</div>';
+    const pw=DB.peiwans[me];
+    if(pw){document.getElementById('pf-games').value=pw.games.join(',');document.getElementById('pf-intro').value=pw.intro;document.getElementById('pf-price').value=pw.price||'';document.getElementById('pf-pay').value=pw.pay||'';}
+  }else if(ap&&ap.status==='pending'){
+    banner.innerHTML='<div class="pending-banner">⏳ 申请已提交，等待管理员审核...</div>';
+    form.style.display='none';
+  }else if(ap&&ap.status==='rejected'){
+    banner.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:#f87171">✕ 申请未通过，可重新提交</div>';
+    form.style.display='block';
+  }else{
+    banner.innerHTML='';form.style.display='block';
+  }
+  const il=document.getElementById('income-list');
+  const inc=DB.incomes[me]||[];
+  if(!inc.length){il.innerHTML='<div style="color:#6b7280;font-size:12px;text-align:center;padding:10px">暂无收益记录</div>';return}
+  il.innerHTML=[...inc].reverse().map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)"><div><div style="font-size:13px">${r.title}</div><div style="font-size:10px;color:#6b7280">${new Date(r.time).toLocaleString('zh')}</div></div><div style="color:#4ade80;font-weight:700">+¥${r.amount}</div></div>`).join('');
+}
+
+// ===== 大厅 =====
+function renderHall(){
+  const u=DB.users[me]||{};
+  const el=document.getElementById('hall-nick');if(el)el.textContent='Hi, '+u.nick;
+  const nw=document.getElementById('hall-notice');
+  if(DB.notices.length){nw.style.display='block';nw.innerHTML=`<div style="background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);border-radius:10px;padding:9px 12px;font-size:12px;color:#fbbf24">📢 ${DB.notices[DB.notices.length-1].text}</div>`;}
+  else nw.style.display='none';
+  const ht=document.getElementById('hall-tasks');
+  const recent=[...DB.tasks].reverse().slice(0,5);
+  if(!recent.length){ht.innerHTML='<div style="text-align:center;padding:20px;color:#6b7280;font-size:12px">暂无任务，快去发布吧！</div>';return}
+  const sm={open:'b-g',taken:'b-y',done:'b-p'};const st={open:'待接单',taken:'进行中',done:'已完成'};
+  ht.innerHTML=recent.map(t=>`<div class="card" style="cursor:pointer" onclick="goTab('tab-tasks')">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:600;font-size:13px;color:#e9d5ff;flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</div>
+      <span class="badge ${sm[t.status]}">${st[t.status]}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px">
+      <span style="color:#6b7280">${(DB.users[t.poster]||{nick:'匿名'}).nick}</span>
+      <span style="color:#bd00ff;font-weight:600">¥${t.money}</span>
+    </div>
+  </div>`).join('');
+}
+
+window.onload=()=>{
+  me=localStorage.getItem('gs2_me')||'';
+  if(me&&DB.users[me]&&DB.users[me].pw){enterMain()}
+};
+</script>
+</body>
 </html>
